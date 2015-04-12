@@ -1,3 +1,3 @@
 [submodule "src/DataProtection"]
 	path = src/DataProtection
-	url = git@github.com:davidfowl/DataProtection.git
+	url = https://github.com/davidfowl/DataProtection.git
