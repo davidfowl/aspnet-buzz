@@ -29,7 +29,7 @@ namespace AspNet.Buzz
         public IConfiguration Configuration { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
-        {
+        { 
             services.AddSignalR();
 
             services.AddSingleton<GithubEventUpdater>();
@@ -48,6 +48,9 @@ namespace AspNet.Buzz
             app.UseErrorPage();
 
             app.UseStaticFiles();
+
+            app.UseWebSockets();
+
             app.UseSignalR();
 
             app.ApplicationServices.GetService<GithubEventUpdater>().Initialize();
