@@ -43,7 +43,7 @@
             hub.on('dummy', function() {});
 
             connection.received(function(data) {
-                $('#stream').append('<li>' + JSON.stringify(data) + '</li>');
+                $('#stream').prepend('<li>' + JSON.stringify(data) + '</li>');
             });
 
             connection.start();

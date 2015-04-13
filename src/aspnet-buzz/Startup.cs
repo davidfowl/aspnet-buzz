@@ -47,7 +47,7 @@ namespace AspNet.Buzz
 
             app.UseErrorPage();
 
-            app.UseStaticFiles();
+            app.UseFileServer();
 
             app.UseWebSockets();
 
