@@ -7,18 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         body {
-            padding-top: 5px;
+            padding-top: 10px;
             padding-bottom: 10px;
-            padding-left: 5px;
+            padding-left: 10px;
+            background-color: #f5f5f5;
         }
 
-        .feed {
-            min-width: 400px;
-            padding: 10px 10px 10px 10px;
-        }
-
-        .feed li {
-            list-style-type: none;;
+        #stream {
+            margin-top: 10px;
         }
         
     </style>
@@ -26,24 +22,172 @@
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <link href="https://assets-cdn.github.com/assets/github-6a4174aa7e25ce4268078491fdfa22273eef841d99e1ab07ccce9b89c747f55d.css" media="all" rel="stylesheet" />
+    <link href="https://assets-cdn.github.com/assets/github2-5b5e999e041f2586f9dc06b940229076225e6ec5ab5406be292a87331325fdc0.css" media="all" rel="stylesheet" />
 </head>
 <body>
     <h2>ASP.NET 5 Live event feed</h2>
     <i>The only place to get ASP.NET 5 updates!</i>
-    <ul id="stream" class="feed">
-    </ul>
+
+    <div id="stream" class="news"> 
+    </div>
+
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.3.min.js"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.0.min.js"></script>
+    <script type="text/html" id="issue-template">
+        <div class="alert">
+            <div class="body">
+                <span class="mega-octicon octicon-<%=octicon %>"></span>
+                <div class="title">
+                  <a href="https://github.com/<%=user %>" data-ga-click="News feed, event click, Event click type:IssuesEvent target:actor"><%=user %></a> <%=title %>
+                </div>
+
+                <div class="details">
+                  <a href="https://github.com/<%=user %>"><img alt="@<%=user %>" class="gravatar" height="30" src="<%=avatar_url %>?v=3&amp;s=60" width="30"></a>
+                  <div class="message">
+                    <blockquote>
+                      <%=message %>
+                    </blockquote>
+                  </div>
+                </div>
+            </div> 
+        </div>
+    </script>
+    <script type="text/html">
+
+    </script>
+    <script type="text/javascript">
+    // Simple JavaScript Templating
+    // John Resig - http://ejohn.org/ - MIT Licensed
+    (function(){
+      var cache = {};
+     
+      this.tmpl = function tmpl(str, data){
+        // Figure out if we're getting a template, or if we need to
+        // load the template - and be sure to cache the result.
+        var fn = !/\W/.test(str) ?
+          cache[str] = cache[str] ||
+            tmpl(document.getElementById(str).innerHTML) :
+         
+          // Generate a reusable function that will serve as a template
+          // generator (and which will be cached).
+          new Function("obj",
+            "var p=[],print=function(){p.push.apply(p,arguments);};" +
+           
+            // Introduce the data as local variables using with(){}
+            "with(obj){p.push('" +
+           
+            // Convert the template into pure JavaScript
+            str
+              .replace(/[\r\t\n]/g, " ")
+              .split("<%").join("\t")
+              .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+              .replace(/\t=(.*?)%>/g, "',$1,'")
+              .split("\t").join("');")
+              .split("%>").join("p.push('")
+              .split("\r").join("\\'")
+          + "');}return p.join('');");
+       
+        // Provide some basic currying to the user
+        return data ? fn( data ) : fn;
+      };
+    })();
+    </script>
+
     <script>
         $(function() {
+            function htmlEncode(value) {
+              return $('<div/>').text(value).html();
+            }
+
+            function getIssueTitleSuffix(e) {
+                var url = e.Payload.Comment ? e.Payload.Comment.Html_Url : e.Payload.Issue.Html_Url;
+                return '<a href="' + url + '" data-ga-click="News feed, event click, Event click type:IssueCommentEvent target:issue-comment" title="' + e.Payload.Issue.Title + '">' +  e.Repo.Name + '/#' + e.Payload.Issue.Number + '</a>';
+            };
+
+            function viewModel(e) {
+                var message = '',
+                    title = '',
+                    octicon = '',
+                    template = null;
+
+                if (e.Type == 'IssuesEvent')
+                {
+                    title = '<span>' + e.Payload.Action + '</span> issue ' + getIssueTitleSuffix(e);
+
+                    message = e.Payload.Issue.Title;
+
+                    template = 'issue-template';
+
+                    if (e.Payload.Action == 'opened')
+                    {
+                        octicon = 'issue-opened';
+                    }
+                    else if (e.Payload.Action == 'reopened')
+                    {
+                        octicon = 'issue-reopened';
+                    }
+                    else if (e.Payload.Action == 'closed')
+                    {
+                        octicon = 'issue-closed';
+                    }
+                }
+                else if (e.Type == 'IssueCommentEvent')
+                {
+                    if (e.Payload.Action == 'created')
+                    {
+                        title = '<span>commented</span> on ' + (e.Payload.Pull_Request ? 'pull request ' : 'issue ') + getIssueTitleSuffix(e);
+                    }
+
+                    message = e.Payload.Comment.Body || '';
+
+                    template = 'issue-template';
+
+                    octicon = 'comment-discussion';
+                }
+                else if (e.Type == 'PushEvent')
+                {
+
+                }
+                else if (e.Type == 'CreateEvent')
+                {
+
+                }
+                else if (e.Type == 'PullRequestEvent')
+                {
+
+                }
+                else if (e.Type == 'PullRequestReviewCommentEvent')
+                {
+
+                }
+                else if (e.Type == 'CommitCommentEvent')
+                {
+
+                }
+
+                return {
+                    user: e.Actor.Login,
+                    avatar_url: e.Actor.Avatar_Url,
+                    octicon: octicon,
+                    message: htmlEncode(message),
+                    title: title,
+                    template: template
+                };
+            }
+
             var connection = $.hubConnection();
             connection.logging = true;
             var hub = connection.createHubProxy('events');
 
-            hub.on('dummy', function() {});
+            hub.on('githubEvent', function(e) {
+                var model = viewModel(e);
 
-            connection.received(function(data) {
-                $('#stream').prepend('<li>' + JSON.stringify(data) + '</li>');
+                if (model.template)
+                {
+                    var data = tmpl($('#' + model.template).html(), model);
+                    $('#stream').prepend(data);
+                }
             });
 
             connection.start();
