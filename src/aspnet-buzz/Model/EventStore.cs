@@ -5,13 +5,19 @@ namespace AspNet.Buzz
 {
     public class EventStore<TEvent> : IEventStore<TEvent>
     {
-        private readonly List<TEvent> _events = new List<TEvent>();
-        
+        private readonly Queue<TEvent> _events = new Queue<TEvent>();
+        private static readonly int MaxEvents = 25;
+
         public void Add(TEvent @event)
         {
             lock (_events)
             {
-                _events.Add(@event);
+                _events.Enqueue(@event);
+
+                if (_events.Count > MaxEvents)
+                {
+                    _events.Dequeue();
+                }
             }
         }
 
@@ -19,7 +25,7 @@ namespace AspNet.Buzz
         {
             lock (_events)
             {
-                return _events;
+                return _events.ToArray();
             }
         }
     }
