@@ -1,3 +1,3 @@
 {
-    "projects": [ "src", "src/DataProtection/src" ]
+    "projects": [ "src", "src/DataProtection/src", "src/SignalR-Server/src" ]
 }

@@ -1,3 +1,6 @@
 [submodule "src/DataProtection"]
 	path = src/DataProtection
 	url = https://github.com/davidfowl/DataProtection.git
+[submodule "src/SignalR-Server"]
+	path = src/SignalR-Server
+	url = https://github.com/aspnet/SignalR-Server.git
