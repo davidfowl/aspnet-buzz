@@ -39,11 +39,11 @@
             <div class="body">
                 <span class="mega-octicon octicon-<%=octicon %>"></span>
                 <div class="title">
-                  <a href="https://github.com/<%=user %>" data-ga-click="News feed, event click, Event click type:IssuesEvent target:actor"><%=user %></a> <%=title %>
+                  <a href="https://github.com/<%=user %>" target="_blank" data-ga-click="News feed, event click, Event click type:IssuesEvent target:actor"><%=user %></a> <%=title %>
                 </div>
 
                 <div class="details">
-                  <a href="https://github.com/<%=user %>"><img alt="@<%=user %>" class="gravatar" height="30" src="<%=avatar_url %>?v=3&amp;s=60" width="30"></a>
+                  <a href="https://github.com/<%=user %>" target="_blank"><img alt="@<%=user %>" class="gravatar" height="30" src="<%=avatar_url %>?v=3&amp;s=60" width="30"></a>
                   <div class="message">
                     <blockquote>
                       <%=message %>
@@ -53,8 +53,52 @@
             </div> 
         </div>
     </script>
-    <script type="text/html">
+    
+    <script type="text/html" id="branch-template">
+        <div class="alert create simple">
+            <div class="body"><!-- create -->
+                <div class="simple">
+                  <span class="octicon octicon-git-branch"></span>
+                
+                  <div class="title">
+                    <a href="https://github.com/<%=user %>" target="_blank" data-ga-click="News feed, event click, Event click type:CreateEvent target:actor"><%=user %></a></a> <span><%=action %></span> branch <a href="<%=repoUrl %>/tree/<%=branch %>" target="_blank" class="css-truncate css-truncate-target branch-name" data-ga-click="News feed, event click, Event click type:CreateEvent target: branch link" title="<%=branch %></a>"><%=branch %></a> </a> at <a href="<%=repoUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:CreateEvent target:repo"><%=repoName %></a>
+                  </div>
+                  
+                </div>
+            </div>
+        </div>
+    </script>
+    
+    <script type="text/html" id="push-template">
+        <div class="alert push">
+            <div class="body">
+            <span class="mega-octicon octicon-git-commit"></span>
 
+            <div class="title">
+              <a href="https://github.com/<%=user %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:actor"><%=user %></a> <span>pushed</span> to <a href="<%=branch %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:branch">git-ignore</a> at <a href="<%=repoUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:repo"><%=repoName %></a>
+            </div>
+
+            <div class="details">
+              <a href="https://github.com/<%=user %>"><img alt="@<%=user %>" class="gravatar" height="30" src="<%=avatar_url %>?v=3&amp;s=60" width="30"></a>
+
+                <div class="commits pusher-is-only-committer">
+                  <ul>
+                    <li>
+                      <span title="<%=user %>">
+                        <img alt="@<%=user %>" height="16" src="<%=avatar_url %>?v=3&amp;s=32" width="16">
+                      </span>
+                      <code><a href="<%=commitUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:sha"><%=sha %></a></code>
+                      <div class="message">
+                        <blockquote>
+                          more cleanup
+                        </blockquote>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+            </div>
+            </div>
+        </div>
     </script>
     <script type="text/javascript">
     // Simple JavaScript Templating
@@ -94,32 +138,39 @@
     })();
     </script>
 
-    <script>
+    <script type="text/javascript">
         $(function() {
             function htmlEncode(value) {
               return $('<div/>').text(value).html();
             }
 
             function getIssueTitleSuffix(e) {
-                var url = e.Payload.Comment ? e.Payload.Comment.Html_Url : e.Payload.Issue.Html_Url;
-                return '<a href="' + url + '" data-ga-click="News feed, event click, Event click type:IssueCommentEvent target:issue-comment" title="' + e.Payload.Issue.Title + '">' +  e.Repo.Name + '/#' + e.Payload.Issue.Number + '</a>';
+                var url = e.Payload.Comment ? e.Payload.Comment.Html_Url : e.Obj.Html_Url;
+                return '<a href="' + url + '" target="_blank" data-ga-click="News feed, event click, Event click type:IssueCommentEvent target:issue-comment" title="' + e.Obj.Title + '">' +  e.Repo.Name + '/#' + e.Obj.Number + '</a>';
             };
 
             function viewModel(e) {
                 var message = '',
                     title = '',
                     octicon = '',
-                    template = null;
+                    template = null,
+                    model = {};
 
-                if (e.Type == 'IssuesEvent')
+                if (e.Type == 'IssuesEvent' || e.Type == 'PullRequestEvent')
                 {
+                    e.Obj = e.Payload.Issue || e.Payload.Pull_Request;
+                    
                     title = '<span>' + e.Payload.Action + '</span> issue ' + getIssueTitleSuffix(e);
 
-                    message = e.Payload.Issue.Title;
+                    message = e.Obj.Title;
 
                     template = 'issue-template';
 
-                    if (e.Payload.Action == 'opened')
+                    if (e.Payload.Pull_Request)
+                    {
+                        octicon = 'git-pull-request';
+                    }
+                    else if (e.Payload.Action == 'opened')
                     {
                         octicon = 'issue-opened';
                     }
@@ -132,8 +183,11 @@
                         octicon = 'issue-closed';
                     }
                 }
-                else if (e.Type == 'IssueCommentEvent')
+                else if (e.Type == 'IssueCommentEvent' || 
+                         e.Type == 'PullRequestReviewCommentEvent')
                 {
+                    e.Obj = e.Payload.Issue || e.Payload.Pull_Request;
+                    
                     if (e.Payload.Action == 'created')
                     {
                         title = '<span>commented</span> on ' + (e.Payload.Pull_Request ? 'pull request ' : 'issue ') + getIssueTitleSuffix(e);
@@ -147,50 +201,74 @@
                 }
                 else if (e.Type == 'PushEvent')
                 {
+                    model['branch'] = '';
+                    model['commitUrl'] = e.Payload;
 
+                    template = 'push-template';
                 }
                 else if (e.Type == 'CreateEvent')
                 {
-
+                    if (e.Payload.Ref_Type === 'branch')
+                    {
+                        model['branch'] = e.Payload.Ref;
+                        model['action'] = 'created';
+                        template = 'branch-template';
+                    }
                 }
-                else if (e.Type == 'PullRequestEvent')
+                else if (e.Type == 'DeleteEvent')
                 {
-
-                }
-                else if (e.Type == 'PullRequestReviewCommentEvent')
-                {
-
+                    if (e.Payload.Ref_Type === 'branch')
+                    {
+                        model['branch'] = e.Payload.Ref;
+                        model['action'] = 'deleted';
+                        template = 'branch-template';
+                    }
                 }
                 else if (e.Type == 'CommitCommentEvent')
                 {
 
                 }
 
-                return {
-                    user: e.Actor.Login,
-                    avatar_url: e.Actor.Avatar_Url,
-                    octicon: octicon,
-                    message: htmlEncode(message),
-                    title: title,
-                    template: template
-                };
+                model['user'] = e.Actor.Login;
+                model['avatar_url'] = e.Actor.Avatar_Url;
+                model['octicon'] = octicon;
+                model['message'] = htmlEncode(message);
+                model['title'] = title;
+                model['repoUrl'] = e.Repo.Html_Url || e.Repo.Url;
+                model['repoName'] = e.Repo.Name;
+                model['template'] = template;
+
+                return model;
             }
-
-            var connection = $.hubConnection();
-            connection.logging = true;
-            var hub = connection.createHubProxy('events');
-
-            hub.on('githubEvent', function(e) {
-                var model = viewModel(e);
-
-                if (model.template)
-                {
-                    var data = tmpl($('#' + model.template).html(), model);
-                    $('#stream').prepend(data);
-                }
-            });
-
-            connection.start();
+            
+            function initialize() {
+                var connection = $.hubConnection();
+                connection.logging = true;
+                var hub = connection.createHubProxy('events');
+    
+                hub.on('githubEvent', function(e) {
+                    var model = viewModel(e);
+    
+                    if (model.template)
+                    {
+                        var data = tmpl($('#' + model.template).html(), model);
+                        $('#stream').prepend(data);
+                    }
+                });
+                
+                connection.disconnected(function () {
+                    connection.hub.log('Dropped the connection from the server. Restarting in 5 seconds.');
+                    
+                    setTimeout(function() {
+                        initialize();     
+                    }, 
+                    5000);
+                });
+                
+                connection.start();
+            }
+            
+            initialize();
         });
     </script>
 </body>

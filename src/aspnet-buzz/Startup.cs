@@ -1,11 +1,8 @@
-using System;
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
 
 namespace AspNet.Buzz
 {
@@ -32,9 +29,9 @@ namespace AspNet.Buzz
         { 
             services.AddSignalR();
 
-            services.AddSingleton<GithubEventUpdater>();
             services.AddSingleton<GithubEventHandler>();
-            services.AddSingleton<EventPublishing>();
+            services.AddSingleton<EventPublisher>();
+            services.AddSingleton(typeof(IEventStore<>), typeof(EventStore<>));
 
             services.Configure<GithubOptions>(Configuration.GetSubKey("Github"));
         }
@@ -53,8 +50,8 @@ namespace AspNet.Buzz
 
             app.UseSignalR();
 
-            app.ApplicationServices.GetService<GithubEventUpdater>().Initialize();
-            app.ApplicationServices.GetService<EventPublishing>();
+            app.ApplicationServices.GetService<GithubEventHandler>().Initialize();
+            app.ApplicationServices.GetService<EventPublisher>();
         }
     }
 }
