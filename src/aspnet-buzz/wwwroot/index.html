@@ -73,7 +73,7 @@
             <span class="mega-octicon octicon-git-commit"></span>
 
             <div class="title">
-              <a href="https://github.com/<%=user %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:actor"><%=user %></a> <span>pushed</span> to <a href="<%=branch %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:branch">git-ignore</a> at <a href="<%=repoUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:repo"><%=repoName %></a>
+              <a href="https://github.com/<%=user %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:actor"><%=user %></a> <span>pushed</span> to <a href="http://github.com/<%=repoName %>/tree/<%=branch %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:branch"><%=branch %></a> at <a href="<%=repoUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:repo"><%=repoName %></a>
             </div>
 
             <div class="details">
@@ -85,12 +85,7 @@
                       <span title="<%=user %>">
                         <img alt="@<%=user %>" height="16" src="<%=avatar_url %>?v=3&amp;s=32" width="16">
                       </span>
-                      <code><a href="<%=commitUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:sha"><%=sha %></a></code>
-                      <div class="message">
-                        <blockquote>
-                          more cleanup
-                        </blockquote>
-                      </div>
+                      <code><a href="<%=commitUrl %>" target="_blank" data-ga-click="News feed, event click, Event click type:PushEvent target:sha"><%=commitsMessage %></a></a></code>
                     </li>
                   </ul>
                 </div>
@@ -199,8 +194,11 @@
                 }
                 else if (e.Type == 'PushEvent')
                 {
-                    model['branch'] = '';
-                    model['commitUrl'] = e.Payload;
+                    var branch = e.Payload.Ref.replace('refs/heads/', '');
+                    var branchCommitsUrl = "https://github.com/" + e.Repo.Name + "/commits/" + branch;
+                    model['branch'] = branch;
+                    model['commitsMessage'] = e.Payload.Commits.length == 1 ? '1 commit' : e.Payload.Commits.length + ' commits';
+                    model['commitUrl'] = branchCommitsUrl;
 
                     template = 'push-template';
                 }
