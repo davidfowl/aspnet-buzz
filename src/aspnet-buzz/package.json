@@ -1,0 +1,42 @@
+{
+  "name": "aspnet-buzz",
+  "version": "0.0.1",
+  "description": "The only place to get ASP.NET 5 updates!",
+  "main": "app.js",
+  "dependencies": {
+    "github-markdown-render": "^1.0.1",
+    "marked": "^0.3.3",
+    "react": "^0.13.1"
+  },
+  "devDependencies": {
+    "browserify": "^9.0.8",
+    "del": "^1.1.1",
+    "dts-bundle": "^0.2.0",
+    "glob": "^5.0.5",
+    "gulp": "^3.8.11",
+    "gulp-tsc": "^0.9.4",
+    "gulp-tslint": "^2.0.0",
+    "gulp-typescript": "^2.6.0",
+    "jsx-typescript": "^1.5.0-alpha.5",
+    "typed-react": "^3.4.1",
+    "typescript-formatter": "^0.3.0",
+    "typescript-require": "^0.2.8",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidfowl/aspnet-buzz.git"
+  },
+  "author": "David Fowler",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davidfowl/aspnet-buzz/issues"
+  },
+  "homepage": "http://myaspnetvm.cloudapp.net",
+  "typescript": {
+    "definition": "_build/app.d.ts"
+  }
+}

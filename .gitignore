@@ -30,3 +30,7 @@ nuget.exe
 project.lock.json
 .vs/
 buildlog
+node_modules/
+build/
+tmp/
+typings/
