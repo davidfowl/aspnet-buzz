@@ -31,6 +31,11 @@ class AspNetBuzzEventStreamClass extends TypedReact.Component<AspNetBuzzEventStr
     getInitialState() {
         return {
             events: [
+                /*issuesEvent,
+                issueCommentEvent,
+                pushEvent,
+                watchEvent,
+                forkEvent*/
             ]
         };
     }
@@ -42,7 +47,7 @@ class AspNetBuzzEventStreamClass extends TypedReact.Component<AspNetBuzzEventStr
 
         hub.on('githubEvent', (e) => {
             console.log(e);
-            var newEvents = this.state.events.concat([e]);
+            var newEvents = [e].concat(this.state.events);
             this.setState({events: newEvents});
         });
 

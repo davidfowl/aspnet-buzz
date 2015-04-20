@@ -18,7 +18,7 @@ class AspNetBuzzHeaderClass extends TypedReact.Component<AspNetBuzzHeaderIProps,
     getInitialState() {
         return {
             title: "ASP.NET 5 Live event feed",
-	    subTitle: " The only place to get ASP.NET 5 updates!"
+            subTitle: " The only place to get ASP.NET 5 updates!"
         };
     }
 
@@ -26,8 +26,10 @@ class AspNetBuzzHeaderClass extends TypedReact.Component<AspNetBuzzHeaderIProps,
     }
 
     public render() {
-        return React.DOM.header({id: "header", className: "header"},
-            React.DOM.div({className: "container"},
+        return React.DOM.header(
+            {id: "header", className: "header"},
+            React.DOM.div(
+                {className: "container"},
                 React.DOM.a(
                     {
                         className: "header-logo-invertocat",
@@ -39,14 +41,29 @@ class AspNetBuzzHeaderClass extends TypedReact.Component<AspNetBuzzHeaderIProps,
                             href: "/",
                             style:
                             {
-                                fontWeight: "500",
-                                margin: "0", lineHeight: "1.1"
+                                fontWeight: "300",
+                                margin: "0", lineHeight: "1.5"
                             }
                         },
                         this.state.title,
                         React.DOM.small(
-                            {style: {fontSize: "65%", fontWeight: "400", lineHeight: "1", color: "#777"}},
+                            {style: {fontSize: "65%", fontWeight: "300", lineHeight: "1", color: "#999"}},
                             this.state.subTitle
+                        )
+                    )
+                ),
+                React.DOM.a(
+                    {
+                        href: "https://github.com/aspnet/home",
+                        title: "View on GitHub",
+                        target: "_blank",
+                        style: {float: "right"}
+                    },
+                    React.DOM.span(
+                        {className: "header-logo-invertocat"},
+                        React.DOM.i(
+                            {className: "octicon octicon-mark-github"},
+                            null
                         )
                     )
                 )

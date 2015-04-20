@@ -19,7 +19,7 @@ class ViewModel {
     repoUrl: string;
     repoName: string;
     branch: string;
-    commitsMessage: string;
+    commits: any[];
     commitUrl: string;
     action: string;
 }
@@ -34,8 +34,6 @@ class GitHubEventClass extends TypedReact.Component<GitHubEventIProps, GitHubEve
     }
 }
 
-// IssuesEvent && PullRequestEvent
-// IssueCommentEvent && PullRequestReviewCommentEvent
 function IssueTemplate(model: ViewModel): React.DOMElement<any>[] {
     return [
         React.DOM.span(
@@ -55,7 +53,7 @@ function IssueTemplate(model: ViewModel): React.DOMElement<any>[] {
             {className: "details"},
             getAvatar(model.user, model.avatar_url),
             React.DOM.div(
-                {className: "message"},
+                {className: "message markdown-body"},
                 React.DOM.blockquote(
                     {dangerouslySetInnerHTML: {__html: model.message}},
                     null
@@ -87,39 +85,13 @@ function PushTemplate(model: ViewModel): React.DOMElement<any>[] {
                 {className: "commits pusher-is-only-committer"},
                 React.DOM.ul(
                     null,
-                    React.DOM.li(
-                        null,
-                        React.DOM.span(
-                            {title: model.user},
-                            React.DOM.img(
-                                {
-                                    alt: model.user,
-                                    height: "16",
-                                    width: "16",
-                                    src: model.avatar_url + "?v=3&amp;s=32"
-                                },
-                                null
-                            )
-                        ),
-                        " ",
-                        React.DOM.code(
-                            null,
-                            React.DOM.a(
-                                {
-                                    href: model.commitUrl,
-                                    target: "_blank"
-                                },
-                                model.commitsMessage
-                            )
-                        )
-                    )
+                    model.commits
                 )
             )
         )
     ];
 }
 
-// CreateEvent && DeleteEvent
 function ActionTemplate(model: ViewModel): React.DOMElement<any>[]  {
     return [
         React.DOM.div(
@@ -139,14 +111,6 @@ function ActionTemplate(model: ViewModel): React.DOMElement<any>[]  {
             )
         )
     ];
-}
-
-function StarredTempate(model: ViewModel): React.DOMElement<any>[] {
-    return [
-    ];
-}
-
-class CommitCommentEventTemplate extends TypedReact.Component<GitHubEventIProps, {}> {
 }
 
 function getAvatar(user: string, avatar_url: string): React.DOMElement<any> {
@@ -198,14 +162,15 @@ function getOcticon(event: Models.GitHubModels.ApiEvent): string {
 
 function getTitlePrefix(event: Models.GitHubModels.ApiEvent): React.DOMElement<any> {
     var obj = event.Payload.Issue || event.Payload.Pull_Request;
-    var url = event.Payload.Comment ? event.Payload.Comment.Html_Url : obj.Html_Url;
+    var htmlUrl = event.Payload.Comment ? event.Payload.Comment.Html_Url : obj.Html_Url;
+
     return React.DOM.a(
         {
-            url: url,
+            href: htmlUrl,
             target: "_blank",
             title: obj.Title
         },
-        event.Repo.Name + "/#" + obj.Number
+        event.Repo.Name + "#" + obj.Number
     );
 }
 
@@ -231,12 +196,98 @@ function getRepositoryUrl(repoName: string): string {
     return "https://github.com/" + repoName;
 }
 
+function getRawMarkdown(markdown: string): string {
+    return Marked(
+        markdown,
+        {
+            sanitize: true,
+            gfm: true,
+            breaks: true,
+            tables: true
+        }
+    );
+}
+
+function getCompareCommitsUrl(repoName: string, firstSha: string, lastSha: string): string {
+    return "https://github.com/" + repoName + "/compare/" + firstSha + "..." + lastSha;
+}
+
+function getMoreCommitsMessage(count: number, repoName, firstSha: string, lastSha: string): React.DOMElement<any> {
+    return React.DOM.li(
+        {className: "more"},
+        React.DOM.a(
+            {
+                href: getCompareCommitsUrl(repoName, firstSha, lastSha),
+                target: "_blank"
+            },
+            count,
+            " more ",
+            count == 1 ? "commit" : "commits",
+            " »"
+        )
+    );
+}
+
+function getCommit(user: Models.GitHubModels.Actor, commit: Models.GitHubModels.Commit): React.DOMElement<any> {
+    return React.DOM.li(
+        null,
+        React.DOM.span(
+            {title: user.Login},
+            React.DOM.img(
+                {
+                    alt: user.Login,
+                    height: "16",
+                    width: "16",
+                    src: user.Avatar_Url + "?v=3&amp;s=32"
+                },
+                null
+            )
+        ),
+        " ",
+        React.DOM.code(
+            null,
+            React.DOM.a(
+                {
+                    href: commit.Url,
+                    target: "_blank"
+                },
+                commit.Sha.substr(0, 7)
+            )
+        ),
+        " ",
+        React.DOM.div(
+            {className: "message"},
+            React.DOM.blockquote(
+                null,
+                commit.Message
+            )
+        )
+    );
+}
+
+function getCommits(event: Models.GitHubModels.ApiEvent): React.DOMElement<any>[] {
+    var commits: React.DOMElement<any>[] = [];
+    if(event.Payload.Commits.length <= 2) {
+        for(var i = 0; i < event.Payload.Commits.length; i++) {
+            commits.push(getCommit(event.Actor, event.Payload.Commits[i]));
+        }
+    }
+    else {
+        for(var i = 0; i < 2; i++) {
+            commits.push(getCommit(event.Actor, event.Payload.Commits[i]));
+            commits.push(getMoreCommitsMessage(event.Payload.Commits.length - 2, event.Repo.Name, event.Payload.Commits[0].Sha.substr(0, 7), event.Payload.Commits[event.Payload.Commits.length - 1].Sha.substr(0, 7)));
+        }
+    }
+
+    return commits;
+}
+
 function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
     var vm = new ViewModel();
     vm.user = event.Actor.Login;
     vm.avatar_url = event.Actor.Avatar_Url;
     vm.repoName = event.Repo.Name;
-    vm.repoUrl = event.Repo.Html_Url || event.Repo.Url || getRepositoryUrl(vm.repoName);
+    vm.repoUrl = getRepositoryUrl(vm.repoName);
     vm.octicon = getOcticon(event);
 
     if(event.Type == "IssuesEvent" || event.Type == "PullRequestEvent")
@@ -250,7 +301,7 @@ function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
             " issue ",
             getTitlePrefix(event)
         ];
-        vm.message = Marked.parse(obj.Title);
+        vm.message = getRawMarkdown(obj.Title);
     }
     else if(event.Type == "IssueCommentEvent" || event.Type == "PullRequestReviewCommentEvent")
     {
@@ -266,13 +317,13 @@ function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
                 (event.Payload.Pull_Request ? "pull request " : "issue "),
                 getTitlePrefix(event)
             ];
-            vm.message = Marked.parse(event.Payload.Comment.Body || "");
+            vm.message = getRawMarkdown(event.Payload.Comment.Body || "");
             vm.octicon = getOcticon(event);
         }
     }
     else if(event.Type == "PushEvent") {
         vm.branch = getBranchName(event.Payload.Ref);
-        vm.commitsMessage = event.Payload.Commits.length.toString() + (event.Payload.Commits.length == 1 ? " commit" : " commits");
+        vm.commits = getCommits(event);
         vm.commitUrl = getBranchCommitUrl(vm.repoName, vm.branch);
         vm.title = [
             React.DOM.span(
@@ -339,7 +390,7 @@ function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
                 " ",
                 React.DOM.a(
                     {
-                        href: vm.repoUrl,
+                        href: getRepositoryUrl(vm.repoName),
                         target: "_blank"
                     },
                     vm.repoName
