@@ -22,6 +22,7 @@ class ViewModel {
     commits: any[];
     commitUrl: string;
     action: string;
+    pullInfo: React.DOMElement<any>;
 }
 
 class GitHubEventClass extends TypedReact.Component<GitHubEventIProps, GitHubEventIState> {
@@ -59,7 +60,8 @@ function IssueTemplate(model: ViewModel): React.DOMElement<any>[] {
                     null
                 )
             )
-        )
+        ),
+        model.pullInfo
     ]
 }
 
@@ -282,6 +284,35 @@ function getCommits(event: Models.GitHubModels.ApiEvent): React.DOMElement<any>[
     return commits;
 }
 
+function getPullInfo(pr: Models.GitHubModels.Payload): React.DOMElement<any> {
+    var commits: number = pr.Pull_Request.Commits;
+    var additions: number = pr.Pull_Request.Additions;
+    var deletions: number = pr.Pull_Request.Deletions;
+    return React.DOM.div(
+        {className: "pull-info"},
+        React.DOM.span(
+            {className: "octicon octicon-git-commit"}
+	),
+        React.DOM.em(
+            null,
+            commits
+        ),
+        commits == 1 ? " commit" : " commits",
+        " with ",
+        React.DOM.em(
+            null,
+            additions
+        ),
+        additions == 1 ? " addition" : " additions",
+        " and ",
+        React.DOM.em(
+            null,
+            deletions
+        ),
+        deletions == 1 ? " deletion" : " deletions"
+    );
+}
+
 function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
     var vm = new ViewModel();
     vm.user = event.Actor.Login;
@@ -298,10 +329,13 @@ function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
                 null,
                 event.Payload.Action
             ),
-            " issue ",
+            (event.Payload.Pull_Request ? " pull request " : " issue "),
             getTitlePrefix(event)
         ];
         vm.message = getRawMarkdown(obj.Title);
+        if(event.Type == "PullRequestEvent" && event.Payload.Action == "opened") {
+            vm.pullInfo = getPullInfo(event.Payload);
+        }
     }
     else if(event.Type == "IssueCommentEvent" || event.Type == "PullRequestReviewCommentEvent")
     {
@@ -424,8 +458,7 @@ function getViewModel(event: Models.GitHubModels.ApiEvent): ViewModel {
             )
         ];
     }
-    
-    console.log(vm);
+
     return vm;
 }
 

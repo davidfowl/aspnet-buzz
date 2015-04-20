@@ -42,6 +42,7 @@ var React = require("react");
 var TypedReact = require("typed-react");
 var GitHub = require("./GitHub/GitHubEvents");
 var issuesEvent = { "Type": "IssuesEvent", "ID": 2736226780, "Repo": { "Name": "aspnet/dnvm" }, "Payload": { "Action": "closed", "Number": 0, "Issue": { "Html_Url": "https://github.com/aspnet/dnvm/issues/218", "Title": "Beta4 DNVM points to the myget aspnetrelease feed instead of nuget.org", "User": { "Login": "muratg", "Avatar_Url": "https://avatars.githubusercontent.com/u/1808428?v=3" }, "Number": 218 }, "Comment": null, "Commits": null, "Pull_Request": null, "Ref": null, "Ref_Type": null }, "Actor": { "Login": "muratg", "Avatar_Url": "https://avatars.githubusercontent.com/u/1808428?" } };
+var pullRequestEvent = { "Type": "PullRequestEvent", "ID": 2740070032, "Repo": { "Name": "aspnet/EntityFramework", "Url": "https://api.github.com/repos/aspnet/EntityFramework", "Html_Url": null }, "Payload": { "Action": "opened", "Number": 2035, "Issue": null, "Comment": null, "Commits": null, "Pull_Request": { "Number": 2035, "Html_Url": "https://github.com/aspnet/EntityFramework/pull/2035", "Title": "Allow generic GetFieldValue to be used in query", "Head": { "Ref": "BunniesDo414" }, "Base": { "Ref": "dev" }, "Commits": 1, "Additions": 279, "Deletions": 270 }, "Ref": null, "Ref_Type": null }, "Actor": { "Login": "ajcvickers", "Avatar_Url": "https://avatars.githubusercontent.com/u/1430078?" } };
 var issueCommentEvent = { "Type": "IssueCommentEvent", "ID": 2736170530, "Repo": { "Name": "aspnet/Session" }, "Payload": { "Action": "created", "Number": 0, "Issue": { "Html_Url": "https://github.com/aspnet/Session/issues/20", "Title": "Session Events", "User": { "Login": "hishamco", "Avatar_Url": "https://avatars.githubusercontent.com/u/3237266?v=3" }, "Number": 20 }, "Comment": { "Pull_Request_Url": null, "Html_Url": "https://github.com/aspnet/Session/issues/20#issuecomment-94240808", "Body": "@Tratcher thanks for your clarification, nothing but checking the validity of the data session after ```await next()``` is a headache specially if you have some data stored in the session, perhaps some pages change some of them those data, so providing such events will let the web devs focusing on their business logic rather than writing a tedious code that may fails in some unexpected situations" }, "Commits": null, "Pull_Request": null, "Ref": null, "Ref_Type": null }, "Actor": { "Login": "hishamco", "Avatar_Url": "https://avatars.githubusercontent.com/u/3237266?" } };
 var pushEvent = { "Type": "PushEvent", "ID": 2736207631, "Repo": { "Name": "aspnet/SignalR-Client-Cpp" }, "Payload": { "Action": null, "Number": 0, "Issue": null, "Comment": null, "Commits": [{ "Sha": "efd3714647a14d663e578aa5afd1cf8b475873fc", "Message": "Zip! - adding private symbols alongside NuGet package", "Distinct": false, "Url": "https://api.github.com/repos/aspnet/SignalR-Client-Cpp/commits/efd3714647a14d663e578aa5afd1cf8b475873fc" }, { "Sha": "71d9d005eb0025cdb5c1685ccc9631f673a541f2", "Message": "Merge branch 'release' into dev", "Distinct": true, "Url": "https://api.github.com/repos/aspnet/SignalR-Client-Cpp/commits/71d9d005eb0025cdb5c1685ccc9631f673a541f2" }], "Pull_Request": null, "Ref": "refs/heads/dev", "Ref_Type": null }, "Actor": { "Login": "moozzyk", "Avatar_Url": "https://avatars.githubusercontent.com/u/1438884?" } };
 var watchEvent = { "Type": "WatchEvent", "ID": 2736180928, "Repo": { "Name": "aspnet/EntityFramework" }, "Payload": { "Action": "started", "Number": 0, "Issue": null, "Comment": null, "Commits": null, "Pull_Request": null, "Ref": null, "Ref_Type": null }, "Actor": { "Login": "hungnd1475", "Avatar_Url": "https://avatars.githubusercontent.com/u/10368418?" } };
@@ -131,7 +132,8 @@ function IssueTemplate(model) {
     return [
         React.DOM.span({ className: "mega-octicon octicon-" + model.octicon }, ""),
         React.DOM.div({ className: "title" }, React.DOM.a({ href: "https://github.com/" + model.user, target: "_blank" }, model.user), " ", model.title),
-        React.DOM.div({ className: "details" }, getAvatar(model.user, model.avatar_url), React.DOM.div({ className: "message markdown-body" }, React.DOM.blockquote({ dangerouslySetInnerHTML: { __html: model.message } }, null)))
+        React.DOM.div({ className: "details" }, getAvatar(model.user, model.avatar_url), React.DOM.div({ className: "message markdown-body" }, React.DOM.blockquote({ dangerouslySetInnerHTML: { __html: model.message } }, null))),
+        model.pullInfo
     ];
 }
 function PushTemplate(model) {
@@ -254,6 +256,12 @@ function getCommits(event) {
     }
     return commits;
 }
+function getPullInfo(pr) {
+    var commits = pr.Pull_Request.Commits;
+    var additions = pr.Pull_Request.Additions;
+    var deletions = pr.Pull_Request.Deletions;
+    return React.DOM.div({ className: "pull-info" }, React.DOM.span({ className: "octicon octicon-git-commit" }), React.DOM.em(null, commits), commits == 1 ? " commit" : " commits", " with ", React.DOM.em(null, additions), additions == 1 ? " addition" : " additions", " and ", React.DOM.em(null, deletions), deletions == 1 ? " deletion" : " deletions");
+}
 function getViewModel(event) {
     var vm = new ViewModel();
     vm.user = event.Actor.Login;
@@ -265,10 +273,13 @@ function getViewModel(event) {
         var obj = event.Payload.Issue || event.Payload.Pull_Request;
         vm.title = [
             React.DOM.span(null, event.Payload.Action),
-            " issue ",
+            (event.Payload.Pull_Request ? " pull request " : " issue "),
             getTitlePrefix(event)
         ];
         vm.message = getRawMarkdown(obj.Title);
+        if (event.Type == "PullRequestEvent" && event.Payload.Action == "opened") {
+            vm.pullInfo = getPullInfo(event.Payload);
+        }
     }
     else if (event.Type == "IssueCommentEvent" || event.Type == "PullRequestReviewCommentEvent") {
         var obj = event.Payload.Issue || event.Payload.Pull_Request;
@@ -352,7 +363,6 @@ function getViewModel(event) {
             }, forkedRepoName)
         ];
     }
-    console.log(vm);
     return vm;
 }
 function getGitHubEventTemplate(props) {

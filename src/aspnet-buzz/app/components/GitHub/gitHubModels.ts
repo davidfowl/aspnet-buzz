@@ -55,6 +55,9 @@ export module GitHubModels {
         Title: string;
         Head: Branch;
         Base: Branch;
+        Commits: number;
+        Additions: number;
+        Deletions: number;
     }
 
     export class Branch {
