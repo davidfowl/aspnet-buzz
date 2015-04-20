@@ -443,8 +443,9 @@ function getGitHubEventTemplate(props: GitHubEventIProps): React.DOMElement<any>
     case "WatchEvent":
     case "ForkEvent":
         return ActionTemplate(getViewModel(props.model));
+    default:
+        console.log("Received a yet to be implemented event type: " + props.model.Type);
     }
-    return [React.createElement("div", null, "Received: " + props.model.Type)];
 }    
 
 export var GitHubEvent = TypedReact.createClass(GitHubEventClass);
