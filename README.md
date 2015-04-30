@@ -5,16 +5,16 @@
 __Install__ [TSD](http://definitelytyped.org/tsd/) and [gulp](http://gulpjs.com/) globally using `npm`
 
 ```
-npm install tsd -g
-npm install gulp -g
+[sudo] npm install tsd -g
+[sudo] npm install gulp -g
 ```
 
 Restore required dependencies
 
 ```
-tsd reinstall
-npm install
-dnu restore
+[sudo] tsd reinstall
+[sudo] npm install
+[sudo] dnu restore
 ```
 
 To build and run the app
