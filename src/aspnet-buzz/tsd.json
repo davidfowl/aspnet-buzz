@@ -1,0 +1,36 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "gulp/gulp.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "gulp-tslint/gulp-tslint.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "gulp-typescript/gulp-typescript.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "jquery/jquery.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "marked/marked.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "node/node.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "react/react.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "signalr/signalr.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    },
+    "vinyl/vinyl.d.ts": {
+      "commit": "e57df787f4e11601625d7e1c1b2ee351b97a18a1"
+    }
+  }
+}
